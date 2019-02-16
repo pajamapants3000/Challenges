@@ -4,6 +4,10 @@ using System.Text;
 
 namespace Challenges
 {
+
+    // Problem: take all characters in a string, increment alphabetic characters to the next in the alphabet (wrapping z->a, Z->Z);
+    // Finally, make all vowels in the resulting string uppercase.
+    // Question: Are we to assume latin alphabet (English) and ASCII character set? I did, FYI.
     public class LetterChanges
     {
         string str;

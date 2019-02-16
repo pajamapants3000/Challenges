@@ -8,6 +8,35 @@ namespace Challenges
     // https://coderbyte.com/algorithm/subset-sum-problem?stay=true
     // NOTE: I need to go through these solutions an understand them
 
+    // I sort of threw this together and played with it until it worked (realized the importance of a few weird test cases to
+    // really reveal bugs).
+    // How should I have done this?
+
+    /* Algorithm/Data Structures: */
+    // 0. Start with a set of integers (`set`) and an integer (`sum`) to be the desired sum;
+    //  create a mapping of sums to integer subsets (`mapping`) for working data,
+    //  and an additional list of subsets (`result`) to be the result (subset-)set.
+    //  Seed `mapping` with a single key, 0, to an empty subset (set `mapping[0] = {{}}`)
+    // 1. Sort set, smallest to largest (ascending order)
+    // 2. Set `i = 0`
+    // 3. Take the integer `addend = set[i]`, in the set
+    // 4. Determine `diff = sum - addend`
+    // 5. Drop all keys in `mapping` that are greater than diff
+    // 6. Take `newResultSubset = mapping[diff]`
+    // 7. For each `subset` in `newResultSubset`:
+    //      7.1. append `addend` to `subset`
+    //      7.2. append `subset` to `result`
+    // 8. Create `tempMapping` of sums->subsets; For each key `key` in `mapping` s.t. `key+addend <= sum-addend => key <= sum - 2*addend` (we know next addend will be >= addend):
+    //      8.1. For each `subset` in `mapping[key]`:
+    //          8.1.1. clone `subset` into `newSubset`
+    //          8.1.2. append `addend` to `newSubset`
+    //          8.1.3. If `key+addend` is not a key in `tempMapping`, set `tempMapping[key+addend] = new List<List<int>>()`
+    //          8.1.4. append `newSubset` to `tempMapping[key+addend]`
+    // 9. For each key `key` in tempMapping:
+    //      9.1. If `key` is not a key in `mapping`, set `mapping[key] = new List<List<int>>()`
+    //      9.2. append range in `tempMapping[key]` to `mapping[key]`
+    // 10. Increment `i`; If `i` < set.Count, return to (3); else return `result`.
+
     public class SubsetSum
     {
         private static bool debug = true;
@@ -15,154 +44,133 @@ namespace Challenges
         private int sum;
         private int[] set;
 
+        private Dictionary<int, List<List<int>>> mapping = new Dictionary<int, List<List<int>>>() { { 0, new List<List<int>>() { new List<int>() { } } } };
+        private List<List<int>> result = new List<List<int>>();
+
         public SubsetSum(int sum, int[] set)
         {
             this.sum = sum;
             this.set = set;
         }
 
-        public List<List<int>> GetSubsetSum()
+        public List<List<int>> GetResult()
         {
-            List<List<int>> result = new List<List<int>>();
-            Dictionary<int, List<List<int>>> sumsToSubsets = new Dictionary<int, List<List<int>>>();
-
+            // 1
             Array.Sort(set);
 
             {/* Debugging */
                 ConsoleDebug($"Calculating subsets of {IntListString(new List<int>(set))} which add to {sum}");
             }
 
-            // seed the dictionary
-            sumsToSubsets[0] = new List<List<int>>() { new List<int>() { } };
-
-            // iterate over integers in set
-            foreach (int addend in set)
+            // iterate over integers in set (2 - 9)
+            foreach (int addend in set) // 2, 3
             {
-                int sumMinusAddend = sum - addend; // interested in key == sumMinusAddend on this pass
+                int diff = sum - addend; // 4
 
-                if (sumsToSubsets.ContainsKey(sumMinusAddend))
+                mapping = GetStillUsefulMappings(diff);    // 5
+
+                // 6, 7
+                if (mapping.ContainsKey(diff))
                 {
                     // add all subsets with sum == sumMinusAddend, with addend appended to each subset
-                    result.AddRange(GetNewSubsetsForResult(sumsToSubsets[sumMinusAddend], addend));
+                    result.AddRange(GetSubsetsCopiedWithNewAddend(mapping[diff], addend));
+
+                    {/* Debugging */
+                        ConsoleDebug("Result is now:");
+                        ConsoleDebugIntListList(result);
+                    }
                 }
 
-                // drop all subsets too large to be of use anymore; copy remaining and append new addend to copies
-                UpdateSumsToSubsets(addend, sumMinusAddend, ref sumsToSubsets);
+                // 8, 9
+                UpdateMapping(addend);
             }
+
+            // 9
+            return result;
+        }
+
+        private Dictionary<int, List<List<int>>> GetStillUsefulMappings(int maxKey)
+        {
+            Dictionary<int, List<List<int>>> result = new Dictionary<int, List<List<int>>>();
+            foreach (int key in mapping.Keys)
+                if (key <= maxKey)
+                    result[key] = mapping[key];
 
             return result;
         }
 
-        private static List<List<int>> GetNewSubsetsForResult(List<List<int>> subsetsWithSumMinusAddend, int addend)
+        private void UpdateMapping(int addend)
         {
-            List<List<int>> result = new List<List<int>>();
+            // 8
+            Dictionary<int, List<List<int>>> tempMapping = GetMappingCopiesWithNewAddend(addend);
 
-            foreach (List<int> subset in subsetsWithSumMinusAddend)
+            // 9
+            foreach (int key in tempMapping.Keys)
             {
-                int[] subsetCopy = new int[subset.Count];
-                subset.CopyTo(subsetCopy);
-                // addend==0 throws things off!
-                if (addend == 0)
-                {
-                    result.Add(new List<int>(subsetCopy));
-                }
-
-                List<int> subsetCopyList = new List<int>(subsetCopy);
-                subsetCopyList.Add(addend);
-                result.Add(subsetCopyList);
-            }
-
-            {/* Debugging */
-                ConsoleDebug("Result is now:");
-                ConsoleDebugIntListList(result);
-            }
-
-            return result;
-        }
-
-        private static void UpdateSumsToSubsets(int addend, int sumMinusAddend, ref Dictionary<int, List<List<int>>> sumsToSubsets)
-        {
-            List<int> keys = new List<int>(sumsToSubsets.Keys);
-            foreach (int key in keys)
-            {
-                // use '>', not '>=' since we may have duplicate addends in set
-                if (key > sumMinusAddend)
-                    RemoveKeyFromSumsToSubsets(sumsToSubsets, key);
-            }
-
-            Dictionary<int, List<List<int>>> newSumsToSubsets = GetNewSumsToSubsets(sumsToSubsets, addend);
-
-            foreach (int key in newSumsToSubsets.Keys)
-            {
-                if (sumsToSubsets.ContainsKey(key))
-                {
-                    sumsToSubsets[key].AddRange(newSumsToSubsets[key]);
-                }
-                else
-                {
-                    sumsToSubsets[key] = newSumsToSubsets[key];
-                }
+                // 9.1
+                if (!mapping.ContainsKey(key))
+                    mapping[key] = new List<List<int>>();
+                // 9.2
+                mapping[key].AddRange(tempMapping[key]);
             }
 
             {/* Debugging */
                 ConsoleDebug($"SumsToSubsets now:");
-                ConsoleDebugSumsToSubsets(sumsToSubsets);
+                ConsoleDebugSumsToSubsets(mapping);
             }
         }
 
-        private static void RemoveKeyFromSumsToSubsets(Dictionary<int, List<List<int>>> sumsToSubsets, int keyToRemove)
-        {
-            sumsToSubsets.Remove(keyToRemove);
-            ConsoleDebug($"Removed key={keyToRemove}.");
-        }
-
-        private static Dictionary<int, List<List<int>>> GetNewSumsToSubsets(Dictionary<int, List<List<int>>> sumsToSubsets, int addend)
+        private Dictionary<int, List<List<int>>> GetMappingCopiesWithNewAddend(int addend)
         {
             Dictionary<int, List<List<int>>> result = new Dictionary<int, List<List<int>>>();
 
-            List<int> keys = new List<int>(sumsToSubsets.Keys);
-            foreach (int key in keys)
+            // 8.1
+            foreach (int key in mapping.Keys)
             {
-                List<List<int>> newSubsets = GetSubsetCopiesWithNewAddend(sumsToSubsets[key], addend);
-
                 int newSum = key + addend;
-                if (result.ContainsKey(newSum))
-                {
-                    result[newSum].AddRange(newSubsets);
-                }
-                else
-                {
-                    result[newSum] = newSubsets;
-                }
+                // subsequent addends will be >= current addend; no use if (newSum + addend) > sum
+                if ((newSum + addend) > sum)
+                    continue;
+
+                // 8.1.1, 8.1.2
+                List<List<int>> newSubsets = GetSubsetsCopiedWithNewAddend(mapping[key], addend);
+
+                // 8.1.3
+                if (!result.ContainsKey(newSum))
+                    result[newSum] = new List<List<int>>();
+
+                // 8.1.4
+                result[newSum].AddRange(newSubsets);
             }
 
             return result;
         }
 
-        private static List<List<int>> GetSubsetCopiesWithNewAddend(List<List<int>> subsetsToCopyAndAugment, int addend)
+        private static List<List<int>> GetSubsetsCopiedWithNewAddend(List<List<int>> subsets, int addend)
         {
             List<List<int>> result = new List<List<int>>();
 
-            foreach (List<int> subsetToCopyAndAugment in subsetsToCopyAndAugment)
+            foreach (List<int> subset in subsets)
             {
-                List<int> newSubset = CloneAndAddToList(subsetToCopyAndAugment, addend);
+                // 8.1.1, 8.1.2
+                List<int> newSubset = GetSubsetCopiedWithNewAddend(subset, addend);
                 result.Add(newSubset);
             }
 
             return result;
         }
 
-        #region Helpers
-        private static List<int> CloneAndAddToList(List<int> listToCloneAndAugment, int addend)
+        private static List<int> GetSubsetCopiedWithNewAddend(List<int> subset, int addend)
         {
-            int[] listCopy = new int[listToCloneAndAugment.Count];
-            listToCloneAndAugment.CopyTo(listCopy);
-            List<int> newList = new List<int>(listCopy);
-            newList.Add(addend);
+            int[] subsetCopy = new int[subset.Count];
+            // 8.1.1
+            subset.CopyTo(subsetCopy);
+            List<int> result = new List<int>(subsetCopy);
+            // 8.1.2
+            result.Add(addend);
 
-            return newList;
+            return result;
         }
-        #endregion
 
         #region Debugging
         private static void ConsoleDebugIntListList(List<List<int>> intListList)

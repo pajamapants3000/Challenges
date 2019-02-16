@@ -8,15 +8,17 @@ namespace Challenges
     {
         static void Main(string[] args)
         {
-            string str = "done?";
-            LetterChanges calculator = new LetterChanges(str);
+            int[] set = { 0 };
+            int sum = 0;
+
+            SubsetSum calculator = new SubsetSum(sum, set);
             
-            Console.WriteLine(calculator.GetResult());
+            Console.WriteLine(SubsetSumResultOutput(calculator.GetResult()));
 
             Console.ReadKey();
         }
 
-        static void PrintSubsetSumResult(List<List<int>> result)
+        static string SubsetSumResultOutput(List<List<int>> result)
         {
             StringBuilder outputBuild = new StringBuilder("{" + Environment.NewLine);
             foreach (List<int> addendList in result)
@@ -30,7 +32,7 @@ namespace Challenges
             }
             outputBuild.AppendLine(Environment.NewLine + "}");
 
-            Console.WriteLine($"result is {outputBuild.ToString()}");
+            return $"result is {outputBuild.ToString()}";
         }
     }
 }

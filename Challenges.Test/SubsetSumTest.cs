@@ -23,7 +23,6 @@ namespace Challenges.Test
             int[] set = { -3, -2, -1, 0, 1, 2, 3, };
             int sum = 0;
             List<List<int>> expected = new List<List<int>>() {
-                new List<int> {},
                 new List<int> {0, },
                 new List<int> {-1, 1, },
                 new List<int> {-1, 0, 1, },
@@ -93,7 +92,7 @@ namespace Challenges.Test
         {
             int[] set = { 0 };
             int sum = 0;
-            List<List<int>> expected = new List<List<int>>() { new List<int>() { }, new List<int>() { 0 } };
+            List<List<int>> expected = new List<List<int>>() { new List<int>() { 0 } };
 
             ApplyTest(set, sum, expected);
         }
@@ -121,7 +120,7 @@ namespace Challenges.Test
         private void ApplyTest(int[] set, int sum, List<List<int>> expected)
         {
             SubsetSum calculator = new SubsetSum(sum, set);
-            List<List<int>> result = calculator.GetSubsetSum();
+            List<List<int>> result = calculator.GetResult();
 
             Assert.IsTrue(TestHelpers.Are2DListsEqual(expected, result));
         }
