@@ -25,14 +25,15 @@ namespace Challenges
         {
             List<List<int>> result = new List<List<int>>();
             Dictionary<int, List<List<int>>> sumsToSubsets = new Dictionary<int, List<List<int>>>();
-            // seed the dictionary
-            sumsToSubsets[0] = new List<List<int>>() { new List<int>() { } };
 
             Array.Sort(set);
 
             {/* Debugging */
-                ConsoleDebug(IntListString(new List<int>(set)));
+                ConsoleDebug($"Calculating subsets of {IntListString(new List<int>(set))} which add to {sum}");
             }
+
+            // seed the dictionary
+            sumsToSubsets[0] = new List<List<int>>() { new List<int>() { } };
 
             // iterate over integers in set
             foreach (int addend in set)
@@ -41,69 +42,55 @@ namespace Challenges
 
                 if (sumsToSubsets.ContainsKey(sumMinusAddend))
                 {
-                    UpdateWorkingResult(sumsToSubsets[sumMinusAddend], addend, ref result);
+                    // add all subsets with sum == sumMinusAddend, with addend appended to each subset
+                    result.AddRange(GetNewSubsetsForResult(sumsToSubsets[sumMinusAddend], addend));
                 }
 
+                // drop all subsets too large to be of use anymore; copy remaining and append new addend to copies
                 UpdateSumsToSubsets(addend, sumMinusAddend, ref sumsToSubsets);
             }
 
             return result;
         }
 
-        private static void UpdateWorkingResult(List<List<int>> subsetsWithRequestedSum, int addend, ref List<List<int>> workingResult)
+        private static List<List<int>> GetNewSubsetsForResult(List<List<int>> subsetsWithSumMinusAddend, int addend)
         {
-            foreach (List<int> subset in subsetsWithRequestedSum)
+            List<List<int>> result = new List<List<int>>();
+
+            foreach (List<int> subset in subsetsWithSumMinusAddend)
             {
                 int[] subsetCopy = new int[subset.Count];
                 subset.CopyTo(subsetCopy);
                 // addend==0 throws things off!
                 if (addend == 0)
                 {
-                    workingResult.Add(new List<int>(subsetCopy));
+                    result.Add(new List<int>(subsetCopy));
                 }
 
                 List<int> subsetCopyList = new List<int>(subsetCopy);
                 subsetCopyList.Add(addend);
-                workingResult.Add(subsetCopyList);
+                result.Add(subsetCopyList);
             }
 
             {/* Debugging */
                 ConsoleDebug("Result is now:");
-                ConsoleDebugIntListList(workingResult);
+                ConsoleDebugIntListList(result);
             }
+
+            return result;
         }
 
         private static void UpdateSumsToSubsets(int addend, int sumMinusAddend, ref Dictionary<int, List<List<int>>> sumsToSubsets)
         {
-            Dictionary<int, List<List<int>>> newSumsToSubsets = new Dictionary<int, List<List<int>>>();
-
             List<int> keys = new List<int>(sumsToSubsets.Keys);
             foreach (int key in keys)
             {
-                {/* Debugging */
-                    ConsoleDebug($"Updating key={key}.");
-                }
-
                 // use '>', not '>=' since we may have duplicate addends in set
                 if (key > sumMinusAddend)
-                {
                     RemoveKeyFromSumsToSubsets(sumsToSubsets, key);
-                }
-                else
-                {
-                    List<List<int>> newSubsets = GetSubsetCopiesWithNewAddend(sumsToSubsets[key], addend);
-
-                    int newSum = key + addend;
-                    if (newSumsToSubsets.ContainsKey(newSum))
-                    {
-                        newSumsToSubsets[newSum].AddRange(newSubsets);
-                    }
-                    else
-                    {
-                        newSumsToSubsets[newSum] = newSubsets;
-                    }
-                }
             }
+
+            Dictionary<int, List<List<int>>> newSumsToSubsets = GetNewSumsToSubsets(sumsToSubsets, addend);
 
             foreach (int key in newSumsToSubsets.Keys)
             {
@@ -119,11 +106,7 @@ namespace Challenges
 
             {/* Debugging */
                 ConsoleDebug($"SumsToSubsets now:");
-                foreach (int key in sumsToSubsets.Keys)
-                {
-                    ConsoleDebug($"key={key}");
-                    ConsoleDebugIntListList(sumsToSubsets[key]);
-                }
+                ConsoleDebugSumsToSubsets(sumsToSubsets);
             }
         }
 
@@ -131,6 +114,29 @@ namespace Challenges
         {
             sumsToSubsets.Remove(keyToRemove);
             ConsoleDebug($"Removed key={keyToRemove}.");
+        }
+
+        private static Dictionary<int, List<List<int>>> GetNewSumsToSubsets(Dictionary<int, List<List<int>>> sumsToSubsets, int addend)
+        {
+            Dictionary<int, List<List<int>>> result = new Dictionary<int, List<List<int>>>();
+
+            List<int> keys = new List<int>(sumsToSubsets.Keys);
+            foreach (int key in keys)
+            {
+                List<List<int>> newSubsets = GetSubsetCopiesWithNewAddend(sumsToSubsets[key], addend);
+
+                int newSum = key + addend;
+                if (result.ContainsKey(newSum))
+                {
+                    result[newSum].AddRange(newSubsets);
+                }
+                else
+                {
+                    result[newSum] = newSubsets;
+                }
+            }
+
+            return result;
         }
 
         private static List<List<int>> GetSubsetCopiesWithNewAddend(List<List<int>> subsetsToCopyAndAugment, int addend)
@@ -175,15 +181,14 @@ namespace Challenges
             }
         }
 
-        private static void ConsoleDebugInitialConditions(Dictionary<int, List<List<int>>> sumsToAddends)
+        private static void ConsoleDebugSumsToSubsets(Dictionary<int, List<List<int>>> sumsToSubsets)
         {
             if (debug)
             {
-                ConsoleDebug($"initial SumsToAddends:");
-                foreach (int key in sumsToAddends.Keys)
+                foreach (int key in sumsToSubsets.Keys)
                 {
                     ConsoleDebug($"key={key}");
-                    ConsoleDebugIntListList(sumsToAddends[key]);
+                    ConsoleDebugIntListList(sumsToSubsets[key]);
                 }
 
             }
@@ -196,7 +201,7 @@ namespace Challenges
             {
                 result.Append(addend.ToString() + ", ");
             }
-            result.AppendLine("]");
+            result.Append("]");
 
             return result.ToString();
         }
