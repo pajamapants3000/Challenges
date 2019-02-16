@@ -8,16 +8,15 @@ namespace Challenges
     {
         static void Main(string[] args)
         {
-            int sum = 3;
-            int[] set = { 1, 1, 1, 1, 1 };
-            SubsetSum calculator = new SubsetSum(sum, set);
+            string str = "done?";
+            LetterChanges calculator = new LetterChanges(str);
             
-            PrintResult(calculator.GetSubsetSum());
+            Console.WriteLine(calculator.GetResult());
 
             Console.ReadKey();
         }
 
-        static void PrintResult(List<List<int>> result)
+        static void PrintSubsetSumResult(List<List<int>> result)
         {
             StringBuilder outputBuild = new StringBuilder("{" + Environment.NewLine);
             foreach (List<int> addendList in result)
