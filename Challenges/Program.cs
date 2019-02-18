@@ -8,13 +8,13 @@ namespace Challenges
     {
         static void Main(string[] args)
         {
-            int[] set = { 0 };
-            int sum = 0;
+            //int num = 2111;
 
-            SubsetSum calculator = new SubsetSum(sum, set);
-            
-            Console.WriteLine(SubsetSumResultOutput(calculator.GetResult()));
+            //KaprekarsConstant calculator = new KaprekarsConstant(num);
 
+            //Console.WriteLine($"result = {calculator.GetResult()}");
+
+            QuestionsMarks.RunTests();
             Console.ReadKey();
         }
 
