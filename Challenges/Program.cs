@@ -8,21 +8,45 @@ namespace Challenges
     {
         static void Main(string[] args)
         {
-            string input = "drdr??rrddd?";
-            //string input = "rrrrrdddd?";
+            int locationsCount = 4;
+            int[,] locations = new int[,] { { 1, 2 }, { -1, -1 }, { -2, 3 }, { 12, 8 } };
+            int stopsCount = 2;
 
-            CorrectPath calculator = new CorrectPath(input);
+            DeliveryTruck calculator = new DeliveryTruck(locationsCount, locations, stopsCount);
 
-            Console.WriteLine($"result = {calculator.GetResult()}");
-
-            //QuestionsMarks.RunTests();
-
-            //Console.WriteLine($"result = {generalizedGCD(5, new int[] { 2, 4, 6, 8, 10 })}");
+            Console.WriteLine($"result = {PrintListListInt(calculator.GetResult())}");
+            //Console.WriteLine($"result = {PrintListListInt(DeliveryTruck.GetOrderedCombinations(5, 3))}");
 
             Console.ReadKey();
         }
 
-        static string SubsetSumResultOutput(List<List<int>> result)
+        private static List<List<int>> pathCombinations(int numDestinations, int numDeliveries)
+        {
+            List<List<int>> result = new List<List<int>>();
+            int[] path = new int[numDeliveries];
+            // get initial path to start from
+            for (int i = 0; i < numDeliveries; i++)
+            {
+                path[i] = i;
+            }
+            result.Add(new List<int>(path));
+
+            // keep altering and storing paths until all combinations are stored
+            for (int i = numDeliveries - 1; i >= 0; i--)
+            {
+                for (int j = i; j < numDeliveries; j++)
+                {
+                    for (int k = path[j] + 1; k < numDestinations; k++)
+                    {
+                        path[j] = k;
+                        result.Add(new List<int>(path));
+                    }
+                }
+            }
+
+            return result;
+        }
+        static string PrintListListInt(List<List<int>> result)
         {
             StringBuilder outputBuild = new StringBuilder("{" + Environment.NewLine);
             foreach (List<int> addendList in result)
@@ -38,6 +62,7 @@ namespace Challenges
 
             return $"result is {outputBuild.ToString()}";
         }
+
         // Expand the Euclid algorithm to N integers
         // sort integers smallest to largest
         // note that the GCDs of the smallest number with all other numbers

@@ -25,7 +25,7 @@ namespace Challenges.Test
             int[][] a = { new int[]{ 2, 3 }, new int[] { 3, 5 } };
             int[][] b = { new int[]{ 3, 5 }, new int[] { 2, 3 } };
 
-            Assert.IsTrue(TestHelpers.Are2DArraysEqual<int>(a, b));
+            Assert.IsTrue(TestHelpers.AreArraySetsEqual<int>(a, b));
         }
     }
 }
