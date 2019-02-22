@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace Challenges
 {
@@ -8,15 +9,7 @@ namespace Challenges
     {
         static void Main(string[] args)
         {
-            int locationsCount = 4;
-            int[,] locations = new int[,] { { 1, 2 }, { -1, -1 }, { -2, 3 }, { 12, 8 } };
-            int stopsCount = 2;
-
-            DeliveryTruck calculator = new DeliveryTruck(locationsCount, locations, stopsCount);
-
-            Console.WriteLine($"result = {PrintListListInt(calculator.GetResult())}");
-            //Console.WriteLine($"result = {PrintListListInt(DeliveryTruck.GetOrderedCombinations(5, 3))}");
-
+            DeliveryTruck.WriteCalculations();
             Console.ReadKey();
         }
 

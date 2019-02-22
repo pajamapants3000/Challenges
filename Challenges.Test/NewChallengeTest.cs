@@ -16,7 +16,7 @@ namespace Challenges.Test
             ApplyTest(input, expected);
         }
 
-        private void ApplyTest(String input, string expected)
+        private void ApplyTest(string input, string expected)
         {
             //NewChallenge calculator = new NewChallenge(input);
             //string result = calculator.GetResult();

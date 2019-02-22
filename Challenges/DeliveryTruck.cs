@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace Challenges
 {
     // Given `locationsCount` locations specified in `locations`, what is the shortest route, starting
-    // at (0, 0) to make `stopsCount` stops?
+    // at (0, 0) to make `stopsCount` stops? Assume traveling "as the crow flies", with distances given
+    // by the Pythagorean Theorem
     public class DeliveryTruck
     {
         private bool debug = false;
@@ -103,12 +105,13 @@ namespace Challenges
                     if (j == i)
                     {
                         distance = 0;
-                        continue;
                     }
-
-                    int[] begin = Get2DIntArrayRow(locations, i);
-                    int[] end = Get2DIntArrayRow(locations, j);
-                    distance = GetDistance(begin, end);
+                    else
+                    {
+                        int[] begin = Get2DIntArrayRow(locations, i);
+                        int[] end = Get2DIntArrayRow(locations, j);
+                        distance = GetDistance(begin, end);
+                    }
 
                     result[i, j] = distance;
                     result[j, i] = distance;
@@ -146,19 +149,21 @@ namespace Challenges
             return result;
         }
 
-        // Get all possible ordered (i.e. order matters) combinations of `count` non-negative integers < max
+        // Get and return all possible ordered (i.e. order matters) combinations of `count` non-negative integers < `max`
         public static List<List<int>> GetOrderedCombinations(int max, int count)
         {
             List<List<int>> result = new List<List<int>>();
 
-            GetSubComboOrUpdate(max, count, 0, new List<int>(), ref result);
+            GetOrderedCombinationsWithGivenPrefix(max, count, new List<int>(), ref result);
 
             return result;
         }
 
-        private static void GetSubComboOrUpdate(int max, int count, int currentIndex, List<int> prefix, ref List<List<int>> result)
+        // Get all possible ordered (i.e. order matters) combinations of `count` non-negative integers < `max`, with initial
+        // values `prefix` already specified; add to `result`
+        private static void GetOrderedCombinationsWithGivenPrefix(int max, int count, List<int> prefix, ref List<List<int>> result)
         {
-            if (currentIndex == count)
+            if (prefix.Count == count)
             {
                 result.Add(new List<int>(prefix));
                 return;
@@ -171,7 +176,7 @@ namespace Challenges
                 List<int> newList = new List<int>(prefix);
                 newList.Add(i);
 
-                GetSubComboOrUpdate(max, count, currentIndex + 1, newList, ref result);
+                GetOrderedCombinationsWithGivenPrefix(max, count, newList, ref result);
             }
         }
 
@@ -187,6 +192,7 @@ namespace Challenges
                 newRoute.Add(0);
                 for (int j = 0; j < combinations[i].Count; j++)
                 {
+                    // our 0-based combinations represent positive-integer locations - increment by one and add to route.
                     newRoute.Add(combinations[i][j] + 1);
                 }
 
@@ -247,5 +253,61 @@ namespace Challenges
                 Console.WriteLine(message);
             }
         }
+
+        #region Time Calculation
+        // Get times for calculating best route for various scenarios, given a fixed set of locations
+        // returns list of tuples with number of stops and time, in milliseconds, to calculate
+        public static int[,] locationsForTimeTest_10 = new int[10, 2]
+        {
+            {11, 11 }, {-16, -8 }, { -21, 13 }, { 12, -28 },  { 33, 4 }, { 15, -6 }, { -7, -18 }, {1,-14 }, {-2, -36 }, { 5, 1},
+        };
+        public static int[,] locationsForTimeTest_20 = new int[20, 2]
+        {
+            { 1, 2 }, { -1, -1 }, { -2, 3 }, { 12, 8 },  { 3, 4 }, { 5, 6 }, { 7, 8 }, {15,-11 }, {22, 36 }, {-5, 15},
+            {11, 11 }, {-16, -8 }, { -21, 13 }, { 12, -28 },  { 33, 4 }, { 15, -6 }, { -7, -18 }, {1,-14 }, {-2, -36 }, { 5, 1},
+        };
+        public static int[,] locationsForTimeTest_30 = new int[30, 2]
+        {
+            { 1, 2 }, { -1, -1 }, { -2, 3 }, { 12, 8 },  { 3, 4 }, { 5, 6 }, { 7, 8 }, {15,-11 }, {22, 36 }, {-5, 15},
+            {11, 11 }, {-16, -8 }, { -21, 13 }, { 12, -28 },  { 33, 4 }, { 15, -6 }, { -7, -18 }, {1,-14 }, {-2, -36 }, { 5, 1},
+            { -1, -2 }, { 31, -21 }, { -12, 13 }, { -3, -8 },  { 13, 14 }, { 15, -6 }, { 37, -18 }, { -15,-11 }, {25, 29 }, {-18, -1},
+        };
+        public static long TimeCalculation(int stopCount, int[,] locations)
+        {
+            DeliveryTruck calculator = new DeliveryTruck(locations.GetLength(0), locations, stopCount);
+            var timer = new System.Diagnostics.Stopwatch();
+            timer.Start();
+            calculator.GetResult();
+            timer.Stop();
+
+            return timer.ElapsedMilliseconds;
+        }
+        public static void WriteCalculations()
+        {
+            List<int> integers = Enumerable.Range(1, 30).ToList<int>();
+            Console.WriteLine("DeliveryTruck time tests." + Environment.NewLine);
+
+            Console.WriteLine("Calculating for 10 locations:");
+            for (int i = 1; i <= 10; i++)
+            {
+                long result = DeliveryTruck.TimeCalculation(i, DeliveryTruck.locationsForTimeTest_10);
+                Console.WriteLine($"    {i} stops took {result} ms");
+            }
+
+            Console.WriteLine("Calculating for 20 locations:");
+            for (int i = 1; i <= 20; i++)
+            {
+                long result = DeliveryTruck.TimeCalculation(i, DeliveryTruck.locationsForTimeTest_20);
+                Console.WriteLine($"    {i} stops took {result} ms");
+            }
+
+            Console.WriteLine("Calculating for 30 locations:");
+            for (int i = 1; i <= 30; i++)
+            {
+                long result = DeliveryTruck.TimeCalculation(i, DeliveryTruck.locationsForTimeTest_30);
+                Console.WriteLine($"    {i} stops took {result} ms");
+            }
+        }
+        #endregion
     }
 }
