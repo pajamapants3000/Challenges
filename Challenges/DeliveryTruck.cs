@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 
+// TODO: try to improve the timer code - I think it's maxing out the memory, not making it past 6 stops for 20 locations (ran for an hour or two without making any further progress)
 namespace Challenges
 {
     // Given `locationsCount` locations specified in `locations`, what is the shortest route, starting

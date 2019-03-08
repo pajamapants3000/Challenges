@@ -33,7 +33,7 @@ namespace Challenges
 
             for (int i = 1; i <= input; i++)
             {
-                result += (5 * input);
+                result += (5 * i);
             }
 
             return result;
